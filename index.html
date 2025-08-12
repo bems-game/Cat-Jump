@@ -64,7 +64,6 @@
             transform: translate(2px, 2px);
             box-shadow: 2px 2px 0 #000;
         }
-        /* --- FIX: KONTROL MOBILE DIPERBAIKI --- */
         #mobile-controls {
             position: absolute;
             bottom: 20px;
@@ -117,7 +116,6 @@
         </div>
     </div>
     
-    <!-- FIX: STRUKTUR HTML KONTROL DIPERBAIKI -->
     <div id="mobile-controls">
         <div class="left-controls">
             <div id="btn-left" class="control-btn">←</div>
@@ -159,7 +157,6 @@
             x: 100, y: 200, width: 40, height: 40, speed: 5,
             velocityX: 0, velocityY: 0, isJumping: true,
             draw() {
-                // ... (kode gambar kucing sama seperti sebelumnya)
                 ctx.fillStyle = '#ff99ff'; ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.fillStyle = '#fff'; ctx.fillRect(this.x + 8, this.y + 10, 8, 8); ctx.fillRect(this.x + 24, this.y + 10, 8, 8);
                 ctx.fillStyle = '#000'; ctx.fillRect(this.x + 10, this.y + 12, 4, 4); ctx.fillRect(this.x + 26, this.y + 12, 4, 4);
@@ -177,13 +174,11 @@
             { x: 1500, y: 350, width: 250, height: 20 }, { x: 1850, y: 280, width: 100, height: 20 },
             { x: 2050, y: 220, width: 100, height: 20 }, { x: 2250, y: 160, width: 100, height: 20 },
             { x: 2500, y: 440, width: 700, height: 40 },
-            // Level diperpanjang
             { x: 3300, y: 440, width: 1000, height: 40 }, { x: 3400, y: 360, width: 150, height: 20 },
             { x: 3650, y: 300, width: 150, height: 20 }, { x: 3900, y: 240, width: 150, height: 20 },
             { x: 4400, y: 440, width: 200, height: 40 }, { x: 4650, y: 380, width: 200, height: 20 },
             { x: 4900, y: 320, width: 200, height: 20 }, { x: 5150, y: 260, width: 200, height: 20 },
             { x: 5500, y: 440, width: 900, height: 40 },
-            // Finish line
             { x: 6200, y: 340, width: 40, height: 100, isFinish: true }
         ];
 
@@ -202,7 +197,7 @@
                 }
             }
             draw() {
-                ctx.fillStyle = '#7CFC00'; // Warna hijau slime
+                ctx.fillStyle = '#7CFC00';
                 ctx.beginPath();
                 ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
                 ctx.fill();
@@ -218,7 +213,6 @@
         function update() {
             if (gameState !== 'playing') return;
 
-            // Player movement
             if (keys.right) player.velocityX = player.speed;
             else if (keys.left) player.velocityX = -player.speed;
             else player.velocityX = 0;
@@ -226,14 +220,13 @@
             if (keys.up && !player.isJumping) {
                 player.velocityY = -12;
                 player.isJumping = true;
-                if (sfx) sfx.triggerAttackRelease('C5', '8n'); // Jump sound
+                if (sfx) sfx.triggerAttackRelease('C5', '8n');
             }
 
             player.x += player.velocityX;
             player.y += player.velocityY;
             player.velocityY += gravity;
 
-            // Platform collision
             let onPlatform = false;
             for (const p of platforms) {
                 if (player.x < p.x + p.width && player.x + player.width > p.x &&
@@ -251,18 +244,16 @@
             }
             if (!onPlatform) player.isJumping = true;
 
-            // Enemy collision
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const enemy = enemies[i];
                 enemy.update();
                 if (player.x < enemy.x + enemy.width && player.x + player.width > enemy.x &&
                     player.y < enemy.y + enemy.height && player.y + player.height > enemy.y) {
                     
-                    // Stomp on enemy
                     if (player.velocityY > 0 && player.y + player.height < enemy.y + 20) {
                         enemies.splice(i, 1);
-                        player.velocityY = -8; // Bounce
-                        if (sfx) sfx.triggerAttackRelease('E5', '8n'); // Stomp sound
+                        player.velocityY = -8;
+                        if (sfx) sfx.triggerAttackRelease('E5', '8n');
                         updateScore(100);
                     } else {
                         endGame("Kamu menabrak musuh!");
@@ -271,7 +262,6 @@
                 }
             }
             
-            // World boundaries & game over
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > worldWidth) player.x = worldWidth - player.width;
             if (player.y > worldHeight) {
@@ -289,14 +279,11 @@
             ctx.save();
             ctx.translate(-cameraX, 0);
 
-            // Draw platforms
             for (const p of platforms) {
                 ctx.fillStyle = p.isFinish ? '#FFD700' : '#3d251e';
                 ctx.fillRect(p.x, p.y, p.width, p.height);
             }
-            // Draw enemies
             for (const enemy of enemies) { enemy.draw(); }
-            // Draw player
             player.draw();
 
             ctx.restore();
@@ -341,7 +328,6 @@
                 if (!sfx) initAudio();
                 Tone.Transport.start();
 
-                // FIX: Reset all movement states to prevent auto-walking
                 keys.left = false;
                 keys.right = false;
                 keys.up = false;
@@ -369,7 +355,7 @@
             if (gameState !== 'playing') return;
             gameState = 'gameOver';
             if (Tone.Transport.state === 'started') Tone.Transport.stop();
-            if (sfx) sfx.triggerAttackRelease('C3', '0.5s'); // Game over sound
+            if (sfx) sfx.triggerAttackRelease('C3', '0.5s');
             uiTitle.innerText = "GAME OVER";
             uiSubtitle.innerText = message;
             startButton.innerText = "COBA LAGI";
@@ -382,7 +368,7 @@
             if (gameState !== 'playing') return;
             gameState = 'gameOver';
             if (Tone.Transport.state === 'started') Tone.Transport.stop();
-            if (sfx) sfx.triggerAttackRelease('C6', '0.5s'); // Win sound
+            if (sfx) sfx.triggerAttackRelease('C6', '0.5s');
             uiTitle.innerText = "KAMU MENANG!";
             uiSubtitle.innerText = `Skor Akhir: ${score}`;
             startButton.innerText = "MAIN LAGI";
@@ -400,12 +386,23 @@
         const btnLeft = document.getElementById('btn-left');
         const btnRight = document.getElementById('btn-right');
         const btnJump = document.getElementById('btn-jump');
+        
+        // FIX: Menambahkan event listener 'touchcancel' untuk mengatasi tombol macet
+        const stopLeft = (e) => { e.preventDefault(); keys.left = false; };
+        const stopRight = (e) => { e.preventDefault(); keys.right = false; };
+        const stopJump = (e) => { e.preventDefault(); keys.up = false; };
+
         btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; });
-        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+        btnLeft.addEventListener('touchend', stopLeft);
+        btnLeft.addEventListener('touchcancel', stopLeft);
+
         btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; });
-        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+        btnRight.addEventListener('touchend', stopRight);
+        btnRight.addEventListener('touchcancel', stopRight);
+
         btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); keys.up = true; });
-        btnJump.addEventListener('touchend', (e) => { e.preventDefault(); keys.up = false; });
+        btnJump.addEventListener('touchend', stopJump);
+        btnJump.addEventListener('touchcancel', stopJump);
         
         gameLoop();
     </script>
