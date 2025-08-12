@@ -64,28 +64,33 @@
             transform: translate(2px, 2px);
             box-shadow: 2px 2px 0 #000;
         }
+        /* --- FIX: KONTROL MOBILE DIPERBAIKI --- */
         #mobile-controls {
             position: absolute;
             bottom: 20px;
             width: 100%;
             display: none; /* Diaktifkan via JS untuk mobile */
-            justify-content: space-between;
+            justify-content: space-between; /* Mendorong grup tombol ke sisi */
+            align-items: flex-end; /* Menjaga tombol tetap di bawah */
             padding: 0 20px;
             box-sizing: border-box;
-            opacity: 0.6;
             z-index: 10;
         }
+        .left-controls, .right-controls {
+            display: flex;
+            gap: 20px; /* Jarak antar tombol */
+        }
         .control-btn {
-            width: 80px;
-            height: 80px;
-            background: #333;
+            width: 90px; /* Tombol lebih besar */
+            height: 90px;
+            background: rgba(51, 51, 51, 0.5); /* Sedikit transparan */
             color: white;
             border: 2px solid #fff;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
+            font-size: 2.5rem; /* Ikon lebih besar */
             user-select: none;
         }
         #score-display {
@@ -112,13 +117,15 @@
         </div>
     </div>
     
-    <!-- Kontrol untuk Mobile -->
+    <!-- FIX: STRUKTUR HTML KONTROL DIPERBAIKI -->
     <div id="mobile-controls">
-        <div>
+        <div class="left-controls">
             <div id="btn-left" class="control-btn">←</div>
-            <div id="btn-right" class="control-btn" style="margin-left: 90px; position: absolute; left: 0;">→</div>
+            <div id="btn-right" class="control-btn">→</div>
         </div>
-        <div id="btn-jump" class="control-btn">↑</div>
+        <div class="right-controls">
+            <div id="btn-jump" class="control-btn">↑</div>
+        </div>
     </div>
 
     <script>
@@ -204,8 +211,8 @@
 
         // --- CONTROLS ---
         const keys = { right: false, left: false, up: false };
-        function handleKeyDown(e) { /* ... sama seperti sebelumnya ... */ if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true; if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true; if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = true; }
-        function handleKeyUp(e) { /* ... sama seperti sebelumnya ... */ if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false; if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false; if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false; }
+        function handleKeyDown(e) { if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true; if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true; if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = true; }
+        function handleKeyUp(e) { if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false; if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false; if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false; }
 
         // --- GAME LOGIC ---
         function update() {
@@ -219,7 +226,7 @@
             if (keys.up && !player.isJumping) {
                 player.velocityY = -12;
                 player.isJumping = true;
-                sfx.triggerAttackRelease('C5', '8n'); // Jump sound
+                if (sfx) sfx.triggerAttackRelease('C5', '8n'); // Jump sound
             }
 
             player.x += player.velocityX;
@@ -255,7 +262,7 @@
                     if (player.velocityY > 0 && player.y + player.height < enemy.y + 20) {
                         enemies.splice(i, 1);
                         player.velocityY = -8; // Bounce
-                        sfx.triggerAttackRelease('E5', '8n'); // Stomp sound
+                        if (sfx) sfx.triggerAttackRelease('E5', '8n'); // Stomp sound
                         updateScore(100);
                     } else {
                         endGame("Kamu menabrak musuh!");
@@ -330,27 +337,32 @@
         }
 
         function startGame() {
+            const startPlaying = () => {
+                if (!sfx) initAudio();
+                Tone.Transport.start();
+                player.x = 100; player.y = 200; player.velocityY = 0;
+                score = 0; updateScore(0);
+                initLevel();
+                gameState = 'playing';
+                uiContainer.style.display = 'none';
+                scoreDisplay.style.display = 'block';
+                if ('ontouchstart' in window) {
+                    mobileControls.style.display = 'flex';
+                }
+            };
+
             if (Tone.context.state !== 'running') {
-                Tone.start();
-                initAudio();
-            }
-            Tone.Transport.start();
-            
-            player.x = 100; player.y = 200; player.velocityY = 0;
-            score = 0; updateScore(0);
-            initLevel();
-            gameState = 'playing';
-            uiContainer.style.display = 'none';
-            scoreDisplay.style.display = 'block';
-            if ('ontouchstart' in window) {
-                mobileControls.style.display = 'flex';
+                Tone.start().then(startPlaying);
+            } else {
+                startPlaying();
             }
         }
 
         function endGame(message) {
-            Tone.Transport.stop();
-            sfx.triggerAttackRelease('C3', '0.5s'); // Game over sound
+            if (gameState !== 'playing') return;
             gameState = 'gameOver';
+            if (Tone.Transport.state === 'started') Tone.Transport.stop();
+            if (sfx) sfx.triggerAttackRelease('C3', '0.5s'); // Game over sound
             uiTitle.innerText = "GAME OVER";
             uiSubtitle.innerText = message;
             startButton.innerText = "COBA LAGI";
@@ -360,9 +372,10 @@
         }
         
         function winGame() {
-            Tone.Transport.stop();
-            sfx.triggerAttackRelease('C6', '0.5s'); // Win sound
+            if (gameState !== 'playing') return;
             gameState = 'gameOver';
+            if (Tone.Transport.state === 'started') Tone.Transport.stop();
+            if (sfx) sfx.triggerAttackRelease('C6', '0.5s'); // Win sound
             uiTitle.innerText = "KAMU MENANG!";
             uiSubtitle.innerText = `Skor Akhir: ${score}`;
             startButton.innerText = "MAIN LAGI";
