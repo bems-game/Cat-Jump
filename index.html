@@ -340,6 +340,13 @@
             const startPlaying = () => {
                 if (!sfx) initAudio();
                 Tone.Transport.start();
+
+                // FIX: Reset all movement states to prevent auto-walking
+                keys.left = false;
+                keys.right = false;
+                keys.up = false;
+                player.velocityX = 0;
+                
                 player.x = 100; player.y = 200; player.velocityY = 0;
                 score = 0; updateScore(0);
                 initLevel();
